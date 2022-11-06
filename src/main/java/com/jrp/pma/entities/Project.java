@@ -1,42 +1,36 @@
 package com.jrp.pma.entities;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.*;
 
 
 @Entity
+@Table(name="PROJECT")
 public class Project {
 	
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long projectId;
 	private String name;
 	private String stage;	//NOTSTARTED, COMPLETED, INPROGRESS
 	private String description;
 	
-	public void addEmployee(Employee emp) {
+	/*public void addEmployee(Employee emp) {
 		if(employees==null) {
 			employees = new ArrayList<>();
 		}
-	}
-	
-	@ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST}, 
+	}*/
+
+	@ManyToMany(cascade = { CascadeType.ALL},
 			fetch = FetchType.LAZY)
-	@JoinTable(name="project_employee", 
-					joinColumns=@JoinColumn(name="project_id"),
-					inverseJoinColumns = @JoinColumn(name="employee_id")
+	@JoinTable(name="project_employee",
+			joinColumns=@JoinColumn(name="project_id"),
+			inverseJoinColumns = @JoinColumn(name="employee_id")
 	)
-	private List <Employee> employees;
+	private List <Employee> employees = employees = new ArrayList<>();;
 	
 	public Project() {
 		
@@ -51,8 +45,32 @@ public class Project {
 		
 		
 	}
+
 	public List<Employee> getEmployees() {
-		return employees;
+		return Collections.unmodifiableList(employees);
+		//return employees;
+	}
+
+	public void addEmployee(Employee employee){
+
+		//avoid circular calls : assumes equals and hashcode implemented
+		if(! employees.contains(employee)){
+			employees.add(employee);
+
+			//add method to Product : sets 'other side' of association
+			employee.addProject(this);
+		}
+	}
+
+	public void removeEmployee(Employee employee){
+
+		//avoid circular calls: assumes equals and hashcode implemented:
+		if(! employees.contains(employee)){
+			employees.remove(employee);
+
+			//add method to Product: set 'other side' of association:
+			employee.removeProject(this);
+		}
 	}
 
 	public void setEmployees(List<Employee> employees) {

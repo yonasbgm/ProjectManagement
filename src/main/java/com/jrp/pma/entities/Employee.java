@@ -1,18 +1,13 @@
 package com.jrp.pma.entities;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.*;
 
 @Entity
+@Table(name="EMPLOYEE")
 public class Employee {
 	
 	@Id
@@ -21,15 +16,14 @@ public class Employee {
 	private String firstName;
 	private String lastName;
 	private String email;
-	
-	@ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST}, 
+
+	@ManyToMany(cascade = CascadeType.ALL,
 			fetch = FetchType.LAZY)
-		@JoinTable(name="project_employee", 
-		joinColumns=@JoinColumn(name="employee_id"),
-		inverseJoinColumns = @JoinColumn(name="project_id")
-	)	
-	
-	private List<Project> projects;
+	@JoinTable(name="project_employee",
+			joinColumns=@JoinColumn(name="employee_id"),
+			inverseJoinColumns = @JoinColumn(name="project_id")
+	)
+	private List<Project> projects = new ArrayList <>();;
 	
 	public Employee() {
 		
@@ -40,10 +34,11 @@ public class Employee {
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.email = email;
-	}	
-	
+	}
+
 	public List<Project> getProjects() {
-		return projects;
+		return Collections.unmodifiableList(projects);
+		//return projects;
 	}
 
 	public void setProjects(List<Project> projects) {
@@ -74,10 +69,23 @@ public class Employee {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	
-	
-	
-	
-	
+
+
+	public void addProject(Project project) {
+		if(! projects.contains(project) ){
+			projects.add(project);
+
+			//add method to Product : sets 'other side' of association
+			project.addEmployee(this);
+		}
+	}
+
+	public void removeProject(Project project) {
+		if(! projects.contains(project) ){
+			projects.remove(project);
+			project.removeEmployee(this);
+		}
+	}
+
 
 }
